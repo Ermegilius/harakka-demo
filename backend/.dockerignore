@@ -1,0 +1,42 @@
+# Docker files
+Dockerfile*
+docker-compose*.yml
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea
+*.sublime-workspace
+*.launch
+.settings/
+.c9/
+
+# Build and temp directories
+.temp
+.tmp
+build
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Debug and reporting
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+.nyc_output
+debug/
+
+# Configuration files not needed in container
+.eslintrc*
+.prettierrc*
+.editorconfig
+tsconfig.build.json
+
+# Stryker testing temp files
+.stryker-tmp
+
+# CI/CD files
+.gitlab-ci.yml
+.travis.yml
+.circleci/
