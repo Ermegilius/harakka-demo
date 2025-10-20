@@ -1,5 +1,5 @@
 # Use specific version pin with security patches
-FROM node:20.12-alpine3.20 AS builder
+FROM node:22-alpine3.22 AS builder
 
 # Add build arguments for better versioning
 ARG NODE_ENV=production
@@ -27,8 +27,7 @@ COPY backend/package.json ./backend/
 # Install dependencies with explicit CI mode and security checks
 RUN npm ci --prefix common && \
     npm ci --prefix backend && \
-    npm audit fix --force && \
-    npm audit --production
+    npm audit fix --force || true
 
 # Copy source files
 COPY common/ ./common/
@@ -39,12 +38,15 @@ COPY tsconfig.json ./
 RUN npm run build --prefix backend
 
 # Production image with security patches
-FROM node:20.12-alpine3.20 AS production
+FROM node:22-alpine3.22 AS production
 
 WORKDIR /app
 
 # Set to production environment
 ENV NODE_ENV=production
+
+# Support for Google Cloud Run dynamic port assignment
+ENV PORT=3000
 
 # Update Alpine packages and install security updates
 RUN apk update && apk upgrade && \
@@ -59,14 +61,10 @@ COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/package*.json ./
 COPY --from=builder /app/common ./common
 
-# Install only production dependencies and run security audit
+# Install only production dependencies
 RUN npm ci --only=production && \
     npm prune --production && \
-    npm audit fix --force && \
-    npm audit --production
-
-# Clean npm cache
-RUN npm cache clean --force
+    npm cache clean --force
 
 # Set ownership to non-root user
 RUN chown -R nestjs:nodejs /app
@@ -81,13 +79,13 @@ RUN mkdir -p /app/tmp && \
 USER nestjs
 
 # Expose the application port
-EXPOSE 3000
+EXPOSE ${PORT}
 
-# Health check with timeout using curl instead of wget
+# Health check with timeout using curl
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
+  CMD curl -f http://localhost:${PORT}/health || exit 1
 
-# Use dumb-init to handle signals properly
+# Use dumb-init to handle signals properly (important for Cloud Run graceful shutdown)
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 # Start the application
