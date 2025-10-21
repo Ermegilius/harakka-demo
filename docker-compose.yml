@@ -36,8 +36,8 @@ services:
         VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD)}
         # Frontend will use /api proxy, so this points to localhost from browser
         VITE_API_URL: http://localhost:5180/api
-        VITE_SUPABASE_URL: ${SUPABASE_URL}
-        VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+        VITE_SUPABASE_URL: https://rcbddkhvysexkvgqpcud.supabase.co
+        VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjYmRka2h2eXNleGt2Z3FwY3VkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NjUwMDksImV4cCI6MjA2OTQ0MTAwOX0.ElfOVYh0hPifuV27pSwJptv8Xt8srgmSSOtB1Agu6OU
     container_name: harakka-frontend
     env_file:
       - .env.local # Load at runtime, not build time

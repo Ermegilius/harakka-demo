@@ -56,6 +56,12 @@ ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
 ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
 ENV NODE_ENV=production
 
+# Verify environment variables before build (optional but helpful for debugging)
+RUN echo "Building with:" && \
+    echo "  VITE_API_URL=${VITE_API_URL}" && \
+    echo "  VITE_SUPABASE_URL=${VITE_SUPABASE_URL}" && \
+    echo "  VITE_SUPABASE_ANON_KEY=***${VITE_SUPABASE_ANON_KEY: -8}"
+
 # Build the application from the frontend directory
 WORKDIR /app/frontend
 RUN npm run build
