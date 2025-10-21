@@ -17,11 +17,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - ALLOWED_ORIGINS=http://localhost:5180,http://frontend,http://harakka-frontend
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - ALLOWED_ORIGINS=http://localhost:5180,http://harakka-frontend,http://harakka-frontend:80
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
@@ -38,7 +34,8 @@ services:
       args:
         BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
         VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD)}
-        VITE_API_URL: http://localhost:3000
+        # Frontend will use /api proxy, so this points to localhost from browser
+        VITE_API_URL: http://localhost:5180/api
         VITE_SUPABASE_URL: ${SUPABASE_URL}
         VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
     container_name: harakka-frontend
@@ -48,7 +45,8 @@ services:
     ports:
       - "5180:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/health"]
       interval: 30s

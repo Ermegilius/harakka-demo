@@ -71,7 +71,7 @@ RUN addgroup -g 1001 -S nodejs && \
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/package*.json ./
 COPY --from=builder /app/common ./common/
-COPY backend/config.mts ./
+COPY --from=builder /app/backend/config.mts ./
 
 # Install only production dependencies
 RUN npm install --omit=dev && \
@@ -97,4 +97,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 # Start the application
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/backend/src/main.js"]
