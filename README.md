@@ -55,6 +55,10 @@ Comprehensive documentation is available in the `docs` directory:
 - [Subabase local development](docs/developers/database/supabase-local-development.md) - Local Supabase setup
 - [Supabase dotenvx](docs/developers/database/supabase-dotenvx.md) - Managing Supabase environment variables
 
+### Dockerization Documentation
+
+- [Docker Setup Guide](docs/developers/dockerization/docker-setup.md) - Building and running with Docker and Docker Compose
+
 ### Workflow Documentation
 
 - [Default Deployment](docs/developers/workflows/default-deployment.md) - Default Production deployment (Azure)

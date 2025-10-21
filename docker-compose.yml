@@ -1,0 +1,61 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+        VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD)}
+    container_name: harakka-backend
+    env_file:
+      - .env.local # Load at runtime, not build time
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - ALLOWED_ORIGINS=http://localhost:5180,http://harakka-frontend,http://harakka-frontend:80
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - harakka-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+        VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD)}
+        # Frontend will use /api proxy, so this points to localhost from browser
+        VITE_API_URL: http://localhost:5180/api
+        VITE_SUPABASE_URL: https://rcbddkhvysexkvgqpcud.supabase.co
+        VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjYmRka2h2eXNleGt2Z3FwY3VkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NjUwMDksImV4cCI6MjA2OTQ0MTAwOX0.ElfOVYh0hPifuV27pSwJptv8Xt8srgmSSOtB1Agu6OU
+    container_name: harakka-frontend
+    env_file:
+      - .env.local # Load at runtime, not build time
+    restart: unless-stopped
+    ports:
+      - "5180:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - harakka-network
+
+networks:
+  harakka-network:
+    driver: bridge

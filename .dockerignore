@@ -1,0 +1,38 @@
+# Exclude node_modules
+**/node_modules
+
+# Development and git files
+.git
+.github
+.vscode
+**/.DS_Store
+**/.env*
+!**/.env.example
+!**/.env.*.template
+
+# Build artifacts
+**/dist
+**/build
+**/.next
+**/.nuxt
+
+# Test files
+**/coverage
+**/__tests__
+**/*.test.*
+**/*.spec.*
+
+# Logs
+**/logs
+**/*.log
+**/npm-debug.log*
+
+# Lock files (excluding the top-level ones)
+**/package-lock.json
+!package-lock.json
+**/yarn.lock
+!yarn.lock
+
+# Specifically exclude the circular dependencies
+**/common/node_modules/full-stack-booking-app
+**/common/node_modules/harakka
