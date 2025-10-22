@@ -8,7 +8,7 @@ This guide covers deploying the Harakka application to Google Cloud Run using pr
 
 1. **Google Cloud Account** with billing enabled
 2. **Google Cloud CLI** (`gcloud`) installed and configured
-3. **Docker images** already built and pushed to Google Artifact Registry
+3. **Docker images** already built and . **Docker images** already built and pushed to Google Artifact Registry
 4. **Supabase project** set up and accessible
 
 ### Verify gcloud Installation
@@ -69,14 +69,14 @@ CRON_URL=https://your-backend-url.run.app/cron/reminders/run
 
 ### Step 2: Deploy Backend Service
 
-#### Option A: Deploy from Artifact Registry (Recommended)
+#### Deploy from Artifact Registry
 
 ```bash
 # Set variables
 PROJECT_ID="your-project-id"
 REGION="europe-north1"  # Choose closest region
 SERVICE_NAME="harakka-backend"
-IMAGE_URL="europe-north1-docker.pkg.dev/${PROJECT_ID}/harakka-repo/backend:latest"
+IMAGE_URL="europe-north1-docker.pkg.dev/${PROJECT_ID}/harakka-demo/backend:latest"
 
 # Deploy backend
 gcloud run deploy ${SERVICE_NAME} \
@@ -106,18 +106,6 @@ BACKEND_URL=$(gcloud run services describe ${SERVICE_NAME} \
   --region=${REGION} \
   --format='value(status.url)')
 echo "Backend URL: ${BACKEND_URL}"
-```
-
-#### Option B: Deploy from Source (Alternative)
-
-```bash
-# Deploy backend from Dockerfile
-gcloud run deploy harakka-backend \
-  --source=. \
-  --dockerfile=backend/Dockerfile \
-  --region=europe-north1 \
-  --allow-unauthenticated \
-  --port=8080
 ```
 
 ---

@@ -41,7 +41,8 @@ RUN cd common && npm install --prefer-offline --no-audit --progress=false
 
 # Then install frontend dependencies with dev dependencies (so types/plugins exist for tsc)
 RUN cd frontend && \
-    npm install --include=dev --prefer-offline --no-audit --progress=false
+    npm install --include=dev --prefer-offline --no-audit --progress=false \
+    --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 
 # Copy source code after dependencies are installed
 COPY common/ ./common/
@@ -63,11 +64,12 @@ RUN npm run build
 # Production stage
 FROM nginx:1.29-alpine AS production
 
-# Update Alpine packages
-RUN apk update && apk upgrade
+# Update Alpine packages and install gettext for envsubst
+RUN apk update && apk upgrade && \
+    apk add --no-cache gettext
 
-# Copy Nginx configuration
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+# Let nginx built-in entrypoint render this into /etc/nginx/conf.d/default.conf
+COPY frontend/nginx.conf /etc/nginx/templates/default.conf.template
 
 # Copy built files from builder stage
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
@@ -75,12 +77,8 @@ COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 # Add health check endpoint
 RUN echo "OK" > /usr/share/nginx/html/health
 
-# Expose port
-EXPOSE 80
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget -qO- http://localhost/health || exit 1
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Set default PORT if not provided (Cloud Run will override this)
+ENV PORT=8080
+ENV NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx/templates
+ENV NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/conf.d
+EXPOSE 8080
