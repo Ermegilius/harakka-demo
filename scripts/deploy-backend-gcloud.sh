@@ -100,7 +100,6 @@ echo ""
 echo -e "${CYAN}🔧 Preparing environment variables YAML file...${RESET}"
 
 # Create temporary YAML file for environment variables
-# ⚠️ REMOVED PORT - Cloud Run sets this automatically
 ENV_VARS_YAML=$(mktemp --suffix=.yaml)
 
 cat > "$ENV_VARS_YAML" << EOF
@@ -128,18 +127,64 @@ echo "..."
 echo "---"
 echo ""
 
-# Authenticate with gcloud if needed
+# Authenticate with gcloud
 echo -e "${YELLOW}🔐 Checking authentication...${RESET}"
 gcloud auth configure-docker ${REGION}-docker.pkg.dev -q
 
 echo ""
-echo -e "${CYAN}🚀 Deploying backend service...${RESET}"
+echo -e "${CYAN}🏗️  Building backend image in Google Cloud...${RESET}"
+echo "   This may take 8-15 minutes on first build..."
+echo "   Building from project root to include common/ directory..."
+echo ""
+
+# Create temporary cloudbuild.yaml file with environment variables
+CLOUDBUILD_FILE=$(mktemp --suffix=.yaml)
+
+export IMAGE_URL_FOR_BUILD="${IMAGE_URL}"
+
+cat > "$CLOUDBUILD_FILE" << 'EOF'
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+  - 'build'
+  - '-f'
+  - 'backend/Dockerfile'
+  - '-t'
+  - '${IMAGE_URL_FOR_BUILD}'
+  - '.'
+images:
+- '${IMAGE_URL_FOR_BUILD}'
+timeout: 1200s
+EOF
+
+# Substitute environment variables
+envsubst < "$CLOUDBUILD_FILE" > "${CLOUDBUILD_FILE}.tmp"
+mv "${CLOUDBUILD_FILE}.tmp" "$CLOUDBUILD_FILE"
+
+echo -e "${GREEN}✓ Cloud Build configuration created${RESET}"
+echo -e "${CYAN}📝 Configuration preview:${RESET}"
+head -n 15 "$CLOUDBUILD_FILE"
+echo "..."
+echo ""
+
+# Build from root directory
+gcloud builds submit . \
+    --project=$PROJECT_ID \
+    --timeout=20m \
+    --config="$CLOUDBUILD_FILE"
+
+# Clean up temporary file
+rm -f "$CLOUDBUILD_FILE"
+
+echo ""
+echo -e "${GREEN}✅ Build completed successfully in Google Cloud!${RESET}"
+echo ""
+
+echo -e "${CYAN}🚀 Deploying backend service to Cloud Run...${RESET}"
 echo "   This may take a few minutes..."
 echo ""
 
-# Deploy using --env-vars-file
-# Cloud Run will automatically set PORT (usually 8080)
-# ⚠️ REMOVED --port flag - let Cloud Run use default
+# Deploy to Cloud Run
 gcloud run deploy $SERVICE_NAME \
     --image=$IMAGE_URL \
     --platform=managed \
@@ -215,7 +260,7 @@ echo "   4. Configure custom domain (optional)"
 echo ""
 echo -e "${CYAN}🔗 Useful Commands:${RESET}"
 echo "   View logs:        gcloud run services logs read $SERVICE_NAME --region=$REGION"
+echo "   View build logs:  gcloud builds list --limit=5"
 echo "   Describe service: gcloud run services describe $SERVICE_NAME --region=$REGION"
 echo "   List revisions:   gcloud run revisions list --service=$SERVICE_NAME --region=$REGION"
-echo "   View env vars:    gcloud run services describe $SERVICE_NAME --region=$REGION --format='value(spec.template.spec.containers[0].env)'"
 echo ""
