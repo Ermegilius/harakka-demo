@@ -18,36 +18,35 @@ LABEL org.opencontainers.image.created="${BUILD_DATE}" \
 WORKDIR /app
 
 # Update Alpine packages
-RUN apk update && apk upgrade
+RUN apk update && apk upgrade && apk add --no-cache git
 
 # Copy package files first for better layer caching
 COPY package.json ./
 COPY common/package.json ./common/
 COPY frontend/package.json ./frontend/
 
-# Copy TypeScript & build config files needed to resolve project references/types
+# Copy TypeScript & build config files
 COPY frontend/tsconfig*.json ./frontend/
 COPY frontend/vite.config.ts ./frontend/vite.config.ts
 COPY frontend/tsconfig.app.json ./frontend/tsconfig.app.json
 
-# Handle circular dependencies by creating temporary package.json files
+# Handle circular dependencies
 RUN mkdir -p /app/node_modules /app/common/node_modules && \
     echo '{"name":"harakka","version":"1.2.0"}' > /app/node_modules/package.json && \
     echo '{"name":"full-stack-booking-app","version":"1.2.0"}' > /app/common/node_modules/package.json
 
-# Install dependencies in the correct order
-# First install common dependencies
+# Install dependencies with retry logic
 RUN cd common && npm install --prefer-offline --no-audit --progress=false
 
-# Then install frontend dependencies with dev dependencies (so types/plugins exist for tsc)
 RUN cd frontend && \
-    npm install --include=dev --prefer-offline --no-audit --progress=false
+    npm install --include=dev --prefer-offline --no-audit --progress=false \
+    --fetch-retries=10 --fetch-retry-mintimeout=30000 --fetch-retry-maxtimeout=180000
 
-# Copy source code after dependencies are installed
+# Copy source code
 COPY common/ ./common/
 COPY frontend/ ./frontend/
 
-# Create SVG type declaration file if it doesn't exist properly
+# Create SVG type declaration
 RUN echo 'declare module "*.svg?react" { import React from "react"; const SVG: React.FC<React.SVGProps<SVGSVGElement>>; export default SVG; }' > /app/frontend/src/svg-react.d.ts
 
 # Set build-time environment variables
@@ -56,7 +55,10 @@ ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
 ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
 ENV NODE_ENV=production
 
-# Build the application from the frontend directory
+# Limit Node.js memory to prevent OOM during build
+ENV NODE_OPTIONS="--max-old-space-size=3072"
+
+# Build from frontend directory
 WORKDIR /app/frontend
 RUN npm run build
 
@@ -64,23 +66,22 @@ RUN npm run build
 FROM nginx:1.29-alpine AS production
 
 # Update Alpine packages
-RUN apk update && apk upgrade
+RUN apk update && apk upgrade && \
+    apk add --no-cache gettext && \
+    rm -rf /var/cache/apk/*
 
-# Copy Nginx configuration
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx config template
+COPY frontend/nginx.conf /etc/nginx/templates/default.conf.template
 
-# Copy built files from builder stage
+# Copy built files
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 
-# Add health check endpoint
+# Add health check
 RUN echo "OK" > /usr/share/nginx/html/health
 
-# Expose port
-EXPOSE 80
+# Configure nginx environment variable substitution
+ENV PORT=8080
+ENV NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx/templates
+ENV NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/conf.d
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget -qO- http://localhost/health || exit 1
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 8080

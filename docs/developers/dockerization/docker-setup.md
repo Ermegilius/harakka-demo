@@ -11,7 +11,6 @@ This guide explains how to build, run, and deploy the Harakka Storage & Booking 
 - [Building and Running](#building-and-running)
 - [Configuration Details](#configuration-details)
 - [Troubleshooting](#troubleshooting)
-- [Production Deployment](#production-deployment)
 
 ---
 
@@ -413,12 +412,6 @@ ports:
 
 ---
 
-## Production Deployment
-
-TODO: write after deployment
-
----
-
 ## Security Best Practices
 
 ### DO ✅
@@ -461,7 +454,6 @@ After running `docker-compose up`:
 - [Nginx Configuration Guide](https://nginx.org/en/docs/)
 - [NestJS Docker Guide](https://docs.nestjs.com/recipes/docker)
 - [Vite Environment Variables](https://vitejs.dev/guide/env-and-mode.html)
-<!-- - TODO: add deployment link (Google cloud?) -->
 
 ---
 

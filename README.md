@@ -62,4 +62,5 @@ Comprehensive documentation is available in the `docs` directory:
 ### Workflow Documentation
 
 - [Default Deployment](docs/developers/workflows/default-deployment.md) - Default Production deployment (Azure)
+- [Docker Deployment](docs/developers/workflows/docker-deployment.md) - Deployment using Docker containers
 - [Azure Instances Creation](docs/developers/workflows/azure-instances-creation.md) - Setting up Azure resources
