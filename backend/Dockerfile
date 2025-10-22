@@ -56,7 +56,10 @@ WORKDIR /app
 
 # Set to production environment
 ENV NODE_ENV=production
-ENV PORT=3000
+# ENV PORT=3000
+
+# Expose the application port (Cloud Run will inject PORT env var)
+EXPOSE 8080
 
 # Update Alpine and install required tools
 RUN apk update && apk upgrade && \
@@ -91,7 +94,7 @@ EXPOSE ${PORT}
 
 # Health check with timeout using curl
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:${PORT}/health || exit 1
+  CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
 
 # Use dumb-init to handle signals properly (important for Cloud Run graceful shutdown)
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]

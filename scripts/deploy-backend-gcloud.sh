@@ -1,4 +1,3 @@
-#!/bin/bash
 set -e
 
 # Colors for output
@@ -27,9 +26,9 @@ fi
 
 # Load environment variables from .env.production
 echo -e "${YELLOW}📄 Loading environment variables from $ENV_FILE${RESET}"
-set -a  # automatically export all variables
+set -a
 source "$ENV_FILE"
-set +a  # stop automatically exporting
+set +a
 
 # Validate required variables
 required_vars=(
@@ -101,7 +100,7 @@ echo ""
 echo -e "${CYAN}🔧 Preparing environment variables YAML file...${RESET}"
 
 # Create temporary YAML file for environment variables
-# ⚠️ DO NOT INCLUDE PORT - Cloud Run sets this automatically
+# ⚠️ REMOVED PORT - Cloud Run sets this automatically
 ENV_VARS_YAML=$(mktemp --suffix=.yaml)
 
 cat > "$ENV_VARS_YAML" << EOF
@@ -140,6 +139,7 @@ echo ""
 
 # Deploy using --env-vars-file
 # Cloud Run will automatically set PORT (usually 8080)
+# ⚠️ REMOVED --port flag - let Cloud Run use default
 gcloud run deploy $SERVICE_NAME \
     --image=$IMAGE_URL \
     --platform=managed \
@@ -150,7 +150,6 @@ gcloud run deploy $SERVICE_NAME \
     --memory=512Mi \
     --cpu=1 \
     --timeout=300 \
-    --port=3000 \
     --env-vars-file="$ENV_VARS_YAML"
 
 # Clean up temporary YAML file
@@ -193,10 +192,15 @@ if [ "$CRON_URL_FINAL" != "${DEPLOYED_URL}/cron/reminders/run" ]; then
     
     CRON_URL_FINAL="${DEPLOYED_URL}/cron/reminders/run"
     
+    # Create temporary YAML for update
+    UPDATE_YAML=$(mktemp --suffix=.yaml)
+    echo "CRON_URL: \"${CRON_URL_FINAL}\"" > "$UPDATE_YAML"
+    
     gcloud run services update $SERVICE_NAME \
         --region=$REGION \
-        --update-env-vars="CRON_URL=${CRON_URL_FINAL}"
+        --env-vars-file="$UPDATE_YAML"
     
+    rm -f "$UPDATE_YAML"
     echo -e "${GREEN}✓ CRON_URL updated to: ${CRON_URL_FINAL}${RESET}"
 fi
 
