@@ -1,4 +1,4 @@
-# Harakka Application
+# Harakka Demo Application
 
 A comprehensive platform for managing and booking storage items across multiple locations. This application allows users to browse available storage options, make reservations, and manage their bookings through an intuitive interface.
 
@@ -57,10 +57,10 @@ Comprehensive documentation is available in the `docs` directory:
 
 ### Dockerization Documentation
 
-- [Docker Setup Guide](docs/developers/dockerization/docker-setup.md) - Building and running with Docker and Docker Compose
+- [Docker Setup Guide](docs/developers/dockerization/docker-setup.md) - Local development with Docker Compose
 
 ### Workflow Documentation
 
-- [Default Deployment](docs/developers/workflows/default-deployment.md) - Default Production deployment (Azure)
-- [Docker Deployment](docs/developers/workflows/docker-deployment.md) - Deployment using Docker containers
+- [Default Deployment (Azure)](docs/developers/workflows/default-deployment.md) - Default production deployment to Azure
+- [Docker Deployment (Google Cloud)](docs/developers/workflows/docker-deployment.md) - Container deployment with Google Cloud
 - [Azure Instances Creation](docs/developers/workflows/azure-instances-creation.md) - Setting up Azure resources
