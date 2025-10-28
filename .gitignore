@@ -17,6 +17,11 @@ supabase-prod
 # Volumes that get created when running supabase instance
 supabase-project/volumes/db
 
+# Supabase backups - contains private data
+supabase/backup/
+supabase/backup/**/*
+supabase/.temp/
+
 # Node.js dependencies
 node_modules/*
 .nvmrc
