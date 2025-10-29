@@ -69,6 +69,7 @@
     "backup:storage": "npm run backup:storage:schema && npm run backup:storage:files",
     "backup:all": "node scripts/backup-all.js",
     "backup:verify": "node scripts/verify-backup.js",
+    "reset:storage": "node scripts/restore-storage.js",
     "infisical:sync:local:env": "infisical export --env=staging --format=dotenv > .env.local.recovered && echo '✅ Local environment synced to .env.local.recovered'",
     "infisical:sync:supabase:local": "infisical export --env=dev --format=dotenv > .env.supabase.local.recovered && echo '✅ Supabase local environment synced to .env.supabase.local.recovered'",
     "infisical:sync:env:keys": "infisical export --env=keys --format=dotenv > supabase/.env.keys.recovered && echo '✅ Encryption keys synced to supabase/.env.keys.recovered'",

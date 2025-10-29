@@ -1,2 +1,0 @@
-DROP TABLE IF EXISTS pippi;
-DROP TABLE IF EXISTS pippi2pippi;
